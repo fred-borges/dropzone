@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DropZone</title>
+
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>DropZone</h1>
+
+    <p class="subtitle">
+        Envie seus arquivos de forma simples e rápida.
+    </p>
+
+    <form method="post" action="/send_files" enctype="multipart/form-data">
+
+        <div class="upload-area">
+
+            <div class="upload-icon">☁️</div>
+
+            <p class="upload-title">
+                Arraste o arquivo para aqui
+            </p>
+
+            <p class="upload-text">
+                ou selecione um arquivo do seu computador
+            </p>
+
+            <label for="file" class="file-button">
+                Escolher arquivo
+            </label>
+
+            <input
+                    type="file"
+                    id="file"
+                    name="file"
+                    required
+            >
+
+            <p class="file-name" id="file-name">
+                Nenhum arquivo selecionado
+            </p>
+
+            <button type="submit">
+                Enviar arquivo
+            </button>
+
+        </div>
+
+    </form>
+
+
+
+    <p class="footer">
+        DropZone · File sharing made simple
+    </p>
+
+</div>
+
+</body>
+</html>
