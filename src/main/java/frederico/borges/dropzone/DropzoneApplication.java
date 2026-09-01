@@ -13,6 +13,10 @@ public class DropzoneApplication {
         System.setProperty("spring.datasource.username", dotenv.get("DB_USERNAME"));
         System.setProperty("spring.datasource.password", dotenv.get("DB_PASSWORD"));
 
+        System.setProperty("SUPABASE_URL", dotenv.get("SUPABASE_URL"));
+        System.setProperty("SUPABASE_SECRET_KEY", dotenv.get("SUPABASE_SECRET_KEY"));
+        System.setProperty("SUPABASE_BUCKET", dotenv.get("SUPABASE_BUCKET"));
+
         SpringApplication.run(DropzoneApplication.class, args);
 	}
 

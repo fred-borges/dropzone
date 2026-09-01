@@ -1,68 +1,319 @@
 <!DOCTYPE html>
-<html lang="pt">
+
+<html lang="pt" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>DropZone</title>
 
-    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
 </head>
 
-<body>
+<body class="min-h-screen bg-slate-950 text-white">
 
-<div class="container">
 
-    <h1>DropZone</h1>
+<!-- Header -->
+<header class="border-b border-white/10">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
 
-    <p class="subtitle">
-        Envie seus arquivos de forma simples e rápida.
-    </p>
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight">
+                Drop<span class="text-blue-500">Zone</span>
+            </h1>
 
-    <form method="post" action="/send_files" enctype="multipart/form-data">
-
-        <div class="upload-area">
-
-            <div class="upload-icon">☁️</div>
-
-            <p class="upload-title">
-                Arraste o arquivo para aqui
+            <p class="text-sm text-slate-400">
+                Envie os seus arquivos de forma simples
             </p>
+        </div>
 
-            <p class="upload-text">
-                ou selecione um arquivo do seu computador
+        <div class="hidden rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-sm text-emerald-400 sm:block">
+            ● Online
+        </div>
+
+    </div>
+</header>
+
+
+<!-- Main -->
+<main class="mx-auto flex min-h-[calc(100vh-89px)] max-w-6xl items-center justify-center px-4 py-10 sm:px-6">
+
+    <div class="w-full max-w-2xl">
+
+        <!-- Título -->
+        <div class="mb-8 text-center">
+
+            <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10 text-3xl">
+                ☁️
+            </div>
+
+            <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
+                Envie seu arquivo
+            </h2>
+
+            <p class="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-400 sm:text-base">
+                Selecione um arquivo e envie-o para o DropZone.
+                O seu arquivo será armazenado de forma segura.
             </p>
-
-            <label for="file" class="file-button">
-                Escolher arquivo
-            </label>
-
-            <input
-                    type="file"
-                    id="file"
-                    name="file"
-                    required
-            >
-
-            <p class="file-name" id="file-name">
-                Nenhum arquivo selecionado
-            </p>
-
-            <button type="submit">
-                Enviar arquivo
-            </button>
 
         </div>
 
-    </form>
+
+        <!-- Upload Card -->
+        <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-2xl sm:p-8">
+
+            <form
+                    method="post"
+                    action="/send_files"
+                    enctype="multipart/form-data"
+                    class="space-y-6"
+            >
+
+                <!-- File Area -->
+                <label
+                        for="files"
+                        class="group flex min-h-56 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/50 px-6 text-center transition hover:border-blue-500 hover:bg-blue-500/5"
+                >
+
+                    <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-800 text-2xl transition group-hover:bg-blue-500/10">
+                        📁
+                    </div>
+
+                    <p class="text-base font-medium">
+                        Clique para selecionar um arquivo
+                    </p>
+
+                    <p class="mt-2 text-sm text-slate-500">
+                        ou arraste o arquivo para esta área
+                    </p>
+
+                    <p class="mt-4 text-xs text-slate-600">
+                        Tamanho máximo: 50 MB
+                    </p>
+
+                    <input
+                            type="file"
+                            id="files"
+                            name="file"
+                            class="hidden"
+                    >
+
+                </label>
 
 
+                <!-- Selected file -->
+                <div
+                        id="file-info"
+                        class="hidden rounded-2xl border border-white/10 bg-slate-900/80 p-4"
+                >
 
-    <p class="footer">
-        DropZone · File sharing made simple
-    </p>
+                    <div class="flex items-center gap-4">
 
-</div>
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-xl">
+                            📄
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+
+                            <p
+                                    id="file-name"
+                                    class="truncate text-sm font-medium"
+                            >
+                                arquivo
+                            </p>
+
+                            <p
+                                    id="file-size"
+                                    class="mt-1 text-xs text-slate-500"
+                            >
+                                0 KB
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Button -->
+                <button
+                        type="submit"
+                        class="w-full rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-semibold transition hover:bg-blue-500 active:scale-[0.99]"
+                >
+                    Enviar arquivo
+                </button>
+
+            </form>
+
+        </div>
+
+        <div class="mt-8 space-y-4">
+
+            <h2 class="text-xl font-semibold text-white">
+                Arquivos enviados
+            </h2>
+
+            <div
+                    th:each="file : ${files}"
+                    class="flex flex-col gap-4 rounded-2xl border border-slate-700 bg-slate-800/80 p-5 shadow-lg transition hover:border-slate-600 hover:bg-slate-800 sm:flex-row sm:items-center sm:justify-between"
+            >
+
+                <!-- Informações do arquivo -->
+                <div class="flex min-w-0 items-center gap-4">
+
+                    <!-- Ícone -->
+                    <div
+                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400"
+                    >
+                        <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="h-6 w-6"
+                        >
+                            <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25H8.25m0 0H5.625c-1.036 0-1.875.84-1.875 1.875v15.75c0 1.036.84 1.875 1.875 1.875h12.75c1.036 0 1.875-.84 1.875-1.875V11.25a3.375 3.375 0 0 0-3.375-3.375H15a1.125 1.125 0 0 1-1.125-1.125V5.25a3.375 3.375 0 0 0-3.375-3.375H8.25Z"
+                            />
+                        </svg>
+                    </div>
+
+                    <!-- Nome e detalhes -->
+                    <div class="min-w-0">
+                        <p
+                                class="truncate font-medium text-white"
+                                th:text="${file.filename}"
+                        >
+                            documento.pdf
+                        </p>
+
+                        <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-400">
+
+                    <span th:text="${file.size + ' bytes'}">
+                        0 bytes
+                    </span>
+
+                            <span
+                                    class="text-slate-600"
+                            >
+                        •
+                    </span>
+
+                            <span th:text="${file.contentType}">
+                        application/pdf
+                    </span>
+
+                            <span
+                                    class="text-slate-600"
+                            >
+                        •
+                    </span>
+
+                            <span th:text="${file.createdAt}">
+                        01/09/2026
+                    </span>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Botão Download -->
+                <a
+                        th:href="@{/download/{id}(id=${file.id})}"
+                        class="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500 active:scale-95 sm:w-auto"
+                >
+                    <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="h-5 w-5"
+                    >
+                        <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12M12 16.5V3"
+                        />
+                    </svg>
+
+                    Download
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- Info -->
+        <div class="mt-6 grid grid-cols-1 gap-3 text-center sm:grid-cols-3">
+
+            <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4">
+                <p class="text-lg">🔒</p>
+                <p class="mt-2 text-xs text-slate-400">
+                    Armazenamento seguro
+                </p>
+            </div>
+
+            <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4">
+                <p class="text-lg">⚡</p>
+                <p class="mt-2 text-xs text-slate-400">
+                    Upload rápido
+                </p>
+            </div>
+
+            <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4">
+                <p class="text-lg">☁️</p>
+                <p class="mt-2 text-xs text-slate-400">
+                    Supabase Storage
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<!-- Small JavaScript only for displaying selected file -->
+<script>
+
+    const fileInput = document.getElementById("files");
+    const fileInfo = document.getElementById("file-info");
+    const fileName = document.getElementById("file-name");
+    const fileSize = document.getElementById("file-size");
+
+    fileInput.addEventListener("change", function () {
+
+        const file = this.files[0];
+
+        if (!file) {
+            fileInfo.classList.add("hidden");
+            return;
+        }
+
+        fileName.textContent = file.name;
+
+        const sizeInMB = file.size / (1024 * 1024);
+
+        if (sizeInMB >= 1) {
+            fileSize.textContent = sizeInMB.toFixed(2) + " MB";
+        } else {
+            const sizeInKB = file.size / 1024;
+            fileSize.textContent = sizeInKB.toFixed(2) + " KB";
+        }
+
+        fileInfo.classList.remove("hidden");
+    });
+
+</script>
 
 </body>
 </html>
