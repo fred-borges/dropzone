@@ -16,6 +16,4 @@ public class DropzoneApplication {
         SpringApplication.run(DropzoneApplication.class, args);
 	}
 
-
-
 }
