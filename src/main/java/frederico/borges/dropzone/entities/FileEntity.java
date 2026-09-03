@@ -23,4 +23,8 @@ public class FileEntity {
     private String contentType;
 
     private LocalDateTime createdAt;
+
+    @ManyToOne
+    @JoinColumn(name = "transfer_id")
+    private Transfer transfer;
 }

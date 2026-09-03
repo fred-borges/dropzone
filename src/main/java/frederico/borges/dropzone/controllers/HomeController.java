@@ -1,5 +1,6 @@
 package frederico.borges.dropzone.controllers;
 
+import frederico.borges.dropzone.entities.Transfer;
 import frederico.borges.dropzone.services.FileService;
 import frederico.borges.dropzone.services.SupabaseStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import frederico.borges.dropzone.entities.FileEntity;
 import frederico.borges.dropzone.repositories.FileRepository;
+import frederico.borges.dropzone.services.TransferService;
 import java.time.LocalDateTime;
 
 import java.io.IOException;
@@ -39,6 +41,9 @@ public class HomeController {
     private SupabaseStorageService supabaseStorageService;
 
     @Autowired
+    private TransferService transferService;
+
+    @Autowired
     private FileService fileService;
 
     @GetMapping
@@ -53,36 +58,48 @@ public class HomeController {
 
     @PostMapping("/send_files")
     public ResponseEntity<String> send_files(
-            @RequestParam("file") MultipartFile file
+            @RequestParam(value = "files", required = false) MultipartFile[] files,
+            @RequestParam("code") String code
     ) {
-        if (file.isEmpty()) {
+        if (files == null || files.length == 0) {
             return ResponseEntity.badRequest()
                     .body("Nenhum arquivo foi enviado.");
         }
+        Transfer transfer = transferService.getTransferByCode(code);
         try {
-            String filename = file.getOriginalFilename();
 
-            supabaseStorageService.uploadFile(
-                    filename,
-                    file.getBytes(),
-                    file.getContentType()
-            );
+            for (MultipartFile file : files) {
 
-            FileEntity fileEntity = new FileEntity();
+                if (file.isEmpty()) {
+                    continue;
+                }
 
-            fileEntity.setFilename(filename);
-            fileEntity.setStoragePath(filename);
-            fileEntity.setSize(file.getSize());
-            fileEntity.setContentType(file.getContentType());
-            fileEntity.setCreatedAt(LocalDateTime.now());
+                String filename = file.getOriginalFilename();
 
-            fileRepository.save(fileEntity);
-            return ResponseEntity.ok(
-                    "Arquivo enviado para o Supabase: " + filename
-            );
+                supabaseStorageService.uploadFile(
+                        filename,
+                        file.getBytes(),
+                        file.getContentType()
+                );
+
+                FileEntity fileEntity = new FileEntity();
+
+                fileEntity.setFilename(filename);
+                fileEntity.setStoragePath(filename);
+                fileEntity.setSize(file.getSize());
+                fileEntity.setContentType(file.getContentType());
+                fileEntity.setCreatedAt(LocalDateTime.now());
+                fileEntity.setTransfer(transfer);
+
+                fileRepository.save(fileEntity);
+            }
+
+            return ResponseEntity.ok("Ficheiros enviados com sucesso.");
+
         } catch (Exception e) {
+
             return ResponseEntity.internalServerError()
-                    .body("Erro ao enviar arquivo: " + e.getMessage());
+                    .body("Erro ao enviar ficheiros: " + e.getMessage());
         }
     }
 

@@ -63,6 +63,48 @@
         <!-- Upload Card -->
         <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-2xl sm:p-8">
 
+            <div class="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5">
+
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                    <div>
+                        <p class="text-sm font-medium text-white">
+                            Nova transferência
+                        </p>
+
+                        <p class="mt-1 text-xs text-slate-400">
+                            Crie uma transferência para começar a enviar ficheiros.
+                        </p>
+                    </div>
+
+                    <button
+                            type="button"
+                            id="create-transfer"
+                            class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500 active:scale-95"
+                    >
+                        Criar transferência
+                    </button>
+
+                </div>
+
+                <div
+                        id="transfer-info"
+                        class="mt-4 hidden rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4"
+                >
+                    <p class="text-xs text-slate-400">
+                        Código da transferência
+                    </p>
+
+                    <p
+                            id="transfer-code"
+                            class="mt-1 text-2xl font-bold tracking-widest text-emerald-400"
+                    >
+                        ------
+                    </p>
+                </div>
+
+            </div>
+
             <form
                     method="post"
                     action="/send_files"
@@ -92,12 +134,7 @@
                         Tamanho máximo: 50 MB
                     </p>
 
-                    <input
-                            type="file"
-                            id="files"
-                            name="file"
-                            class="hidden"
-                    >
+                    <input type="file" id="files" name="files" multiple>
 
                 </label>
 
@@ -311,6 +348,27 @@
         }
 
         fileInfo.classList.remove("hidden");
+    });
+
+    const createTransferButton = document.getElementById("create-transfer");
+    const transferInfo = document.getElementById("transfer-info");
+    const transferCode = document.getElementById("transfer-code");
+
+    createTransferButton.addEventListener("click", async function () {
+
+        const response = await fetch("/transfer", {
+            method: "POST"
+        });
+
+        if (!response.ok) {
+            alert("Erro ao criar transferência.");
+            return;
+        }
+
+        const transfer = await response.json();
+
+        transferCode.textContent = transfer.code;
+        transferInfo.classList.remove("hidden");
     });
 
 </script>
