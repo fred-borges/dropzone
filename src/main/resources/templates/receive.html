@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+
+<html lang="pt" xmlns:th="http://www.w3.org/1999/xhtml">
+
+<head>
+
+    
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Receber - DropZone</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.webp">
+    
+
+</head>
+
+<body class="min-h-screen bg-slate-950 text-white">
+
+    
+    <!-- Header -->
+
+    <header class="border-b border-white/10">
+
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
+
+            <div>
+
+                <h1 class="text-2xl font-bold tracking-tight">
+                    Drop<span class="text-blue-500">Zone</span>
+                </h1>
+
+                <p class="text-sm text-slate-400">
+                    Receba os seus ficheiros
+                </p>
+
+            </div>
+
+            <div
+                class="hidden rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-sm text-emerald-400 sm:block">
+                ● Online
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- Main -->
+
+    <main class="mx-auto flex min-h-[calc(100vh-89px)] max-w-5xl items-center justify-center px-4 py-10 sm:px-6">
+
+        <div class="w-full max-w-2xl">
+
+
+            <!-- Título -->
+
+            <div class="mb-8 text-center">
+
+                <div
+                    class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10 text-3xl">
+                    📥
+                </div>
+
+                <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
+                    Receber ficheiros
+                </h2>
+
+                <p class="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-400 sm:text-base">
+                    Introduza o código da transferência para aceder
+                    aos ficheiros partilhados consigo.
+                </p>
+
+            </div>
+
+
+            <!-- Procurar transferência -->
+
+            <form id="receive-form" class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-2xl sm:p-8">
+
+                <div class="text-center">
+
+                    <label for="code" class="text-sm font-medium text-white">
+                        Código da transferência
+                    </label>
+
+                    <input type="text" id="code" name="code" maxlength="6" inputmode="numeric" pattern="[0-9]{6}"
+                        autocomplete="off" placeholder="000000"
+                        class="mt-4 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-4 text-center text-3xl font-bold tracking-[0.35em] text-white outline-none transition placeholder:text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10">
+
+                    <p id="code-error" class="mt-2 hidden text-xs text-red-400">
+                        Introduza um código válido de 6 dígitos.
+                    </p>
+
+                </div>
+
+
+                <button type="submit" id="search-button"
+                    class="mt-5 w-full rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-semibold transition hover:bg-blue-500 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50">
+
+                    Procurar transferência
+
+                </button>
+
+            </form>
+
+
+            <!-- Erro -->
+
+            <div th:if="${error}"
+                class="mt-6 flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+
+                <span class="text-lg">
+                    ⚠️
+                </span>
+
+                <p th:text="${error}">
+                    Transferência não encontrada.
+                </p>
+
+            </div>
+
+
+            <!-- Transferência encontrada -->
+
+            <div th:if="${transfer}" class="mt-8">
+
+
+                <!-- Transfer Info -->
+
+                <div class="mb-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                        <div>
+
+                            <p class="text-xs text-slate-400">
+                                Transferência encontrada
+                            </p>
+
+                            <p class="mt-1 text-sm text-slate-300">
+                                Os ficheiros estão disponíveis para download.
+                            </p>
+
+                        </div>
+
+                        <div class="text-left sm:text-right">
+
+                            <p class="text-xs text-slate-500">
+                                Código
+                            </p>
+
+                            <p class="mt-1 text-2xl font-bold tracking-widest text-emerald-400"
+                                th:text="${transfer.code}">
+                                511594
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Ficheiros -->
+
+                <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-2xl sm:p-6">
+
+                    <div class="mb-5 flex items-center justify-between">
+
+                        <div>
+
+                            <h3 class="text-base font-semibold">
+                                Ficheiros
+                            </h3>
+
+                            <p class="mt-1 text-xs text-slate-500">
+                                Selecione um ficheiro para descarregar.
+                            </p>
+
+                        </div>
+
+                        <div class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-400">
+
+                            <span th:text="${#lists.size(files) + ' ficheiros'}">
+                                0 ficheiros
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Lista -->
+
+                    <div th:if="${!#lists.isEmpty(files)}" class="space-y-3">
+
+                        <div th:each="file : ${files}"
+                            class="group flex flex-col gap-4 rounded-2xl border border-white/10 bg-slate-900/70 p-4 transition hover:border-blue-500/30 hover:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+
+                            <div class="flex min-w-0 items-center gap-4">
+
+                                <div
+                                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-xl">
+
+                                    📄
+
+                                </div>
+
+
+                                <div class="min-w-0">
+
+                                    <p class="truncate text-sm font-medium text-white" th:text="${file.filename}">
+
+                                        documento.pdf
+
+                                    </p>
+
+
+                                    <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+
+                                        <span class="file-size" th:attr="data-size=${file.size}">
+
+                                            0 KB
+
+                                        </span>
+
+                                        <span class="text-slate-700">
+                                            •
+                                        </span>
+
+                                        <span th:text="${file.contentType ?: 'Ficheiro'}">
+                                            application/pdf
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Download -->
+
+                            <a th:href="@{/download/{code}/{id}(code=${transfer.code}, id=${file.id})}"
+                                class="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500 active:scale-95 sm:w-auto">
+
+                                <span>
+                                    ↓
+                                </span>
+
+                                Download
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Sem ficheiros -->
+
+                    <div th:if="${#lists.isEmpty(files)}"
+                        class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 p-8 text-center">
+
+                        <div class="text-3xl">
+                            📭
+                        </div>
+
+                        <p class="mt-3 text-sm font-medium">
+                            Ainda não existem ficheiros
+                        </p>
+
+                        <p class="mt-1 text-xs text-slate-500">
+                            Esta transferência ainda não recebeu ficheiros.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Info -->
+
+            <div class="mt-6 grid grid-cols-1 gap-3 text-center sm:grid-cols-3">
+
+                <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4">
+
+                    <p class="text-lg">
+                        🔒
+                    </p>
+
+                    <p class="mt-2 text-xs text-slate-400">
+                        Acesso por código
+                    </p>
+
+                </div>
+
+
+                <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4">
+
+                    <p class="text-lg">
+                        ⚡
+                    </p>
+
+                    <p class="mt-2 text-xs text-slate-400">
+                        Downloads rápidos
+                    </p>
+
+                </div>
+
+
+                <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4">
+
+                    <p class="text-lg">
+                        ☁️
+                    </p>
+
+                    <p class="mt-2 text-xs text-slate-400">
+                        Armazenamento cloud
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- JavaScript -->
+
+    <script>
+
+        const receiveForm =
+            document.getElementById("receive-form");
+
+        const codeInput =
+            document.getElementById("code");
+
+        const codeError =
+            document.getElementById("code-error");
+
+        const searchButton =
+            document.getElementById("search-button");
+
+
+        /*
+         * Permite apenas números no campo.
+         */
+
+        codeInput.addEventListener("input", function () {
+
+            this.value =
+                this.value.replace(/\D/g, "").slice(0, 6);
+
+            codeError.classList.add("hidden");
+
+        });
+
+
+        /*
+         * Procurar transferência.
+         */
+
+        receiveForm.addEventListener("submit", function (event) {
+
+            event.preventDefault();
+
+            const code =
+                codeInput.value.trim();
+
+
+            if (!/^\d{6}$/.test(code)) {
+
+                codeError.classList.remove("hidden");
+
+                codeInput.classList.add(
+                    "border-red-500"
+                );
+
+                codeInput.focus();
+
+                return;
+
+            }
+
+
+            codeInput.classList.remove(
+                "border-red-500"
+            );
+
+
+            searchButton.disabled = true;
+
+            searchButton.textContent =
+                "A procurar...";
+
+
+            window.location.href =
+                "/receive/" + code;
+
+        });
+
+
+        /*
+         * Formata os tamanhos dos ficheiros.
+         */
+
+        document
+            .querySelectorAll(".file-size")
+            .forEach(function (element) {
+
+                const size =
+                    Number(element.dataset.size);
+
+
+                if (size < 1024) {
+
+                    element.textContent =
+                        size + " bytes";
+
+                    return;
+
+                }
+
+
+                const kb =
+                    size / 1024;
+
+
+                if (kb < 1024) {
+
+                    element.textContent =
+                        kb.toFixed(1) + " KB";
+
+                    return;
+
+                }
+
+
+                const mb =
+                    kb / 1024;
+
+
+                if (mb < 1024) {
+
+                    element.textContent =
+                        mb.toFixed(1) + " MB";
+
+                    return;
+
+                }
+
+
+                const gb =
+                    mb / 1024;
+
+
+                element.textContent =
+                    gb.toFixed(2) + " GB";
+
+            });
+
+    </script>
+    
+
+</body>
+
+</html>

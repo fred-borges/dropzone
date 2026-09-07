@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+
 @Service
 public class SupabaseStorageService {
 
@@ -54,6 +55,18 @@ public class SupabaseStorageService {
                 .header("apikey", supabaseSecretKey)
                 .retrieve()
                 .body(byte[].class);
+    }
+
+    public void deleteFile(String filename) {
+
+        String url = buildUploadUrl(filename);
+
+        restClient.delete()
+                .uri(url)
+                .header("Authorization", "Bearer " + supabaseSecretKey)
+                .header("apikey", supabaseSecretKey)
+                .retrieve()
+                .toBodilessEntity();
     }
 
 }

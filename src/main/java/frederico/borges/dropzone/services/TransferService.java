@@ -7,7 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
+
+import frederico.borges.dropzone.exceptions.TransferExpiredException;
 
 @Service
 public class TransferService {
@@ -25,8 +26,10 @@ public class TransferService {
         int code = (int) (Math.random() * 900000) + 100000;
 
         transfer.setCode(String.valueOf(code));
-        transfer.setCreatedAt(LocalDateTime.now());
-        transfer.setExpiresAt(LocalDateTime.now().plusHours(24));
+        LocalDateTime now = LocalDateTime.now();
+
+        transfer.setCreatedAt(now);
+        transfer.setExpiresAt(now.plusHours(24));
         transfer.setStatus(TransferStatus.PENDING);
 
         return transferRepository.save(transfer);
@@ -40,6 +43,18 @@ public class TransferService {
 
         System.out.println("Encontrou transferência: " + result.isPresent());
 
-        return result.orElseThrow(() -> new RuntimeException("Transfer not found"));
+        Transfer transfer = result.orElseThrow(
+                () -> new RuntimeException("Transfer not found"));
+
+        if (LocalDateTime.now().isAfter(transfer.getExpiresAt())) {
+
+            transfer.setStatus(TransferStatus.EXPIRED);
+
+            transferRepository.save(transfer);
+
+            throw new TransferExpiredException("Transfer expired");
+        }
+
+        return transfer;
     }
 }
