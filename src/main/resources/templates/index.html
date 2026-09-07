@@ -115,6 +115,11 @@
                     enctype="multipart/form-data"
                     class="space-y-6"
             >
+                <input
+                        type="hidden"
+                        id="transfer-code-input"
+                        name="code"
+                >
 
                 <!-- File Area -->
                 <label
@@ -357,6 +362,7 @@
     const createTransferButton = document.getElementById("create-transfer");
     const transferInfo = document.getElementById("transfer-info");
     const transferCode = document.getElementById("transfer-code");
+    const transferCodeInput = document.getElementById("transfer-code-input");
 
     createTransferButton.addEventListener("click", async function () {
 
@@ -372,6 +378,11 @@
         const transfer = await response.json();
 
         transferCode.textContent = transfer.code;
+        transferCodeInput.value = transfer.code;
+
+        console.log("Código da transferência:", transfer.code);
+        console.log("Código no formulário:", transferCodeInput.value);
+
         transferInfo.classList.remove("hidden");
     });
 

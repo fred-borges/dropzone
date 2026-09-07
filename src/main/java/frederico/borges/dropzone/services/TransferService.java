@@ -6,6 +6,7 @@ import frederico.borges.dropzone.status.TransferStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -33,7 +34,12 @@ public class TransferService {
 
     public Transfer getTransferByCode(String code) {
 
-        return transferRepository.findByCode(code)
-                .orElseThrow(() -> new RuntimeException("Transfer not found"));
+        System.out.println("Código recebido: [" + code + "]");
+
+        Optional<Transfer> result = transferRepository.findByCode(code);
+
+        System.out.println("Encontrou transferência: " + result.isPresent());
+
+        return result.orElseThrow(() -> new RuntimeException("Transfer not found"));
     }
 }

@@ -1,3 +1,4 @@
+
 package frederico.borges.dropzone.controllers;
 
 import frederico.borges.dropzone.entities.Transfer;
@@ -17,9 +18,8 @@ import org.springframework.http.MediaType;
 import frederico.borges.dropzone.entities.FileEntity;
 import frederico.borges.dropzone.repositories.FileRepository;
 import frederico.borges.dropzone.services.TransferService;
-import java.time.LocalDateTime;
 
-import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -65,7 +65,9 @@ public class HomeController {
             return ResponseEntity.badRequest()
                     .body("Nenhum arquivo foi enviado.");
         }
+
         Transfer transfer = transferService.getTransferByCode(code);
+
         try {
 
             for (MultipartFile file : files) {
@@ -74,18 +76,21 @@ public class HomeController {
                     continue;
                 }
 
-                String filename = file.getOriginalFilename();
+                String originalFilename = file.getOriginalFilename();
+
+                String storageFilename = originalFilename
+                        .replaceAll("[^a-zA-Z0-9._-]", "_");
 
                 supabaseStorageService.uploadFile(
-                        filename,
+                        storageFilename,
                         file.getBytes(),
                         file.getContentType()
                 );
 
                 FileEntity fileEntity = new FileEntity();
 
-                fileEntity.setFilename(filename);
-                fileEntity.setStoragePath(filename);
+                fileEntity.setFilename(originalFilename);
+                fileEntity.setStoragePath(storageFilename);
                 fileEntity.setSize(file.getSize());
                 fileEntity.setContentType(file.getContentType());
                 fileEntity.setCreatedAt(LocalDateTime.now());
