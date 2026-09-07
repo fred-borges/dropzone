@@ -24,6 +24,6 @@ public class Transfer {
     @Enumerated(EnumType.STRING)
     private TransferStatus status;
 
-    @OneToMany(mappedBy = "transfer")
+    @OneToMany(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FileEntity> files;
 }

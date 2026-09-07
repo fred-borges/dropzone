@@ -1,60 +1,170 @@
+
 package frederico.borges.dropzone.services;
 
+import frederico.borges.dropzone.services.FileService;
+import frederico.borges.dropzone.entities.FileEntity;
 import frederico.borges.dropzone.entities.Transfer;
+import frederico.borges.dropzone.exceptions.TransferExpiredException;
+import frederico.borges.dropzone.exceptions.TransferNotFoundException;
 import frederico.borges.dropzone.repositories.TransferRepository;
 import frederico.borges.dropzone.status.TransferStatus;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Optional;
-
-import frederico.borges.dropzone.exceptions.TransferExpiredException;
 
 @Service
 public class TransferService {
 
-    private final TransferRepository transferRepository;
+    private static final Logger log = LoggerFactory.getLogger(TransferService.class);
 
-    public TransferService(TransferRepository transferRepository) {
+        
+    private final SecureRandom random = new SecureRandom();
+    
+
+    
+    private final TransferRepository transferRepository;
+    private final FileService fileService;
+
+    public TransferService(
+            TransferRepository transferRepository,
+            FileService fileService) {
+
         this.transferRepository = transferRepository;
+        this.fileService = fileService;
     }
+    
+
+
+    // =========================
+    // CRIAR TRANSFERÊNCIA
+    // =========================
 
     public Transfer createTransfer() {
 
         Transfer transfer = new Transfer();
 
-        int code = (int) (Math.random() * 900000) + 100000;
+        String code = generateUniqueCode();
 
-        transfer.setCode(String.valueOf(code));
         LocalDateTime now = LocalDateTime.now();
 
+        transfer.setCode(code);
         transfer.setCreatedAt(now);
-        transfer.setExpiresAt(now.plusHours(24));
-        transfer.setStatus(TransferStatus.PENDING);
+        transfer.setExpiresAt(
+                now.plusHours(24));
+        transfer.setStatus(
+                TransferStatus.PENDING);
 
-        return transferRepository.save(transfer);
+        Transfer savedTransfer = transferRepository.save(transfer);
+
+        log.info(
+                "Transferência criada: code={}",
+                code);
+
+        return savedTransfer;
     }
 
-    public Transfer getTransferByCode(String code) {
+    // =========================
+    // PROCURAR TRANSFERÊNCIA
+    // =========================
 
-        System.out.println("Código recebido: [" + code + "]");
+    public Transfer getTransferByCode(
+            String code) {
 
-        Optional<Transfer> result = transferRepository.findByCode(code);
+        log.debug(
+                "A procurar transferência: code={}",
+                code);
 
-        System.out.println("Encontrou transferência: " + result.isPresent());
+        Transfer transfer = transferRepository
+                .findByCode(code)
+                .orElseThrow(() -> {
 
-        Transfer transfer = result.orElseThrow(
-                () -> new RuntimeException("Transfer not found"));
+                    log.warn(
+                            "Transferência não encontrada: code={}",
+                            code);
 
-        if (LocalDateTime.now().isAfter(transfer.getExpiresAt())) {
+                    return new TransferNotFoundException(
+                            "Transfer not found");
+                });
 
-            transfer.setStatus(TransferStatus.EXPIRED);
+        if (LocalDateTime.now()
+                .isAfter(transfer.getExpiresAt())) {
 
-            transferRepository.save(transfer);
+            transfer.setStatus(
+                    TransferStatus.EXPIRED);
 
-            throw new TransferExpiredException("Transfer expired");
+            transferRepository.save(
+                    transfer);
+
+            log.warn(
+                    "Transferência expirada: code={}",
+                    code);
+
+            throw new TransferExpiredException(
+                    "Transfer expired");
         }
+
+        log.debug(
+                "Transferência encontrada: code={}",
+                code);
 
         return transfer;
     }
+
+    // =========================
+    // GERAR CÓDIGO
+    // =========================
+
+    private String generateUniqueCode() {
+
+        String code;
+
+        do {
+
+            code = String.valueOf(
+                    random.nextInt(900000) + 100000);
+
+        } while (
+                transferRepository
+                        .findByCode(code)
+                        .isPresent()
+        );
+
+        return code;
+    }
+
+        
+    // =========================
+    // ELIMINAR TRANSFERÊNCIA
+    // =========================
+
+    public void deleteTransfer(String code) {
+
+        log.info(
+                "A eliminar transferência: code={}",
+                code);
+
+        Transfer transfer =
+                getTransferByCode(code);
+
+        if (transfer.getFiles() != null) {
+
+            for (FileEntity file : transfer.getFiles()) {
+
+                fileService.deleteFile(file);
+
+            }
+        }
+
+        transferRepository.delete(transfer);
+
+        log.info(
+                "Transferência eliminada: code={}",
+                code);
+    }
+    
+
 }

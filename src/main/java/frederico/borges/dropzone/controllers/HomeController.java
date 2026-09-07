@@ -2,11 +2,9 @@ package frederico.borges.dropzone.controllers;
 
 import frederico.borges.dropzone.entities.FileEntity;
 import frederico.borges.dropzone.entities.Transfer;
-import frederico.borges.dropzone.repositories.FileRepository;
-import frederico.borges.dropzone.services.SupabaseStorageService;
-import frederico.borges.dropzone.services.TransferService;
 import frederico.borges.dropzone.exceptions.TransferExpiredException;
-
+import frederico.borges.dropzone.services.FileService;
+import frederico.borges.dropzone.services.TransferService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,24 +17,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 @Controller
 public class HomeController {
 
-        
-        private final FileRepository fileRepository;
-        private final SupabaseStorageService supabaseStorageService;
+        private final FileService fileService;
         private final TransferService transferService;
 
         public HomeController(
-                        SupabaseStorageService supabaseStorageService,
-                        FileRepository fileRepository,
+                        FileService fileService,
                         TransferService transferService) {
 
-                this.supabaseStorageService = supabaseStorageService;
-                this.fileRepository = fileRepository;
+                this.fileService = fileService;
                 this.transferService = transferService;
         }
 
@@ -55,7 +46,7 @@ public class HomeController {
 
         @PostMapping("/send_files")
         @ResponseBody
-        public ResponseEntity<String> send_files(
+        public ResponseEntity<String> sendFiles(
                         @RequestParam(value = "files", required = false) MultipartFile[] files,
                         @RequestParam("code") String code) {
 
@@ -70,57 +61,9 @@ public class HomeController {
 
                         Transfer transfer = transferService.getTransferByCode(code);
 
-                        for (MultipartFile file : files) {
-
-                                if (file.isEmpty()) {
-                                        continue;
-                                }
-
-                                String originalFilename = file.getOriginalFilename();
-
-                                if (originalFilename == null ||
-                                                originalFilename.isBlank()) {
-
-                                        originalFilename = "file";
-                                }
-
-                                String safeFilename = originalFilename
-                                                .replaceAll(
-                                                                "[^a-zA-Z0-9._-]",
-                                                                "_");
-
-                                String storageFilename = UUID.randomUUID()
-                                                + "-"
-                                                + safeFilename;
-
-                                supabaseStorageService.uploadFile(
-                                                storageFilename,
-                                                file.getBytes(),
-                                                file.getContentType());
-
-                                FileEntity fileEntity = new FileEntity();
-
-                                fileEntity.setFilename(
-                                                originalFilename);
-
-                                fileEntity.setStoragePath(
-                                                storageFilename);
-
-                                fileEntity.setSize(
-                                                file.getSize());
-
-                                fileEntity.setContentType(
-                                                file.getContentType());
-
-                                fileEntity.setCreatedAt(
-                                                LocalDateTime.now());
-
-                                fileEntity.setTransfer(
-                                                transfer);
-
-                                fileRepository.save(
-                                                fileEntity);
-                        }
+                        fileService.uploadFiles(
+                                        files,
+                                        transfer);
 
                         return ResponseEntity.ok(
                                         "Ficheiros enviados com sucesso.");
@@ -141,8 +84,7 @@ public class HomeController {
 
                         return ResponseEntity
                                         .internalServerError()
-                                        .body(
-                                                        "Erro ao enviar ficheiros.");
+                                        .body("Erro ao enviar ficheiros.");
                 }
         }
 
@@ -152,7 +94,6 @@ public class HomeController {
 
         @GetMapping("/receive")
         public String receivePage() {
-
                 return "receive";
         }
 
@@ -199,53 +140,52 @@ public class HomeController {
 
         @GetMapping("/download/{code}/{id}")
         public ResponseEntity<byte[]> downloadFile(
-                        @PathVariable String code,
-                        @PathVariable Long id) {
+                @PathVariable String code,
+                @PathVariable Long id) {
 
-                FileEntity file = fileRepository.findById(id)
-                                .orElseThrow();
+                try {
 
-                Transfer transfer = file.getTransfer();
+                FileEntity file =
+                        fileService.findById(id);
 
-                // Verifica se o código corresponde
-                // à transferência e se ainda está válida.
+                Transfer transfer =
+                        file.getTransfer();
+
                 if (!transfer.getCode().equals(code)) {
 
                         return ResponseEntity
-                                        .notFound()
-                                        .build();
+                                .notFound()
+                                .build();
                 }
 
                 transferService.getTransferByCode(
-                                transfer.getCode());
+                        transfer.getCode());
 
-                byte[] fileBytes = supabaseStorageService.downloadFile(
-                                file.getStoragePath());
+                byte[] fileBytes =
+                        fileService.downloadFile(file);
 
                 return ResponseEntity.ok()
-                                .header(
-                                                HttpHeaders.CONTENT_DISPOSITION,
-                                                "attachment; filename=\""
-                                                                + file.getFilename()
-                                                                + "\"")
-                                .contentType(
-                                                MediaType.parseMediaType(
-                                                                file.getContentType()))
-                                .body(fileBytes);
-        }
+                        .header(
+                                HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\""
+                                        + file.getFilename()
+                                        + "\"")
+                        .contentType(
+                                MediaType.parseMediaType(
+                                        file.getContentType()))
+                        .body(fileBytes);
 
-        // =========================
-        // TESTE DELETE
-        // =========================
+                } catch (TransferExpiredException e) {
 
-        @GetMapping("/test-delete")
-        @ResponseBody
-        public String testDelete() {
+                return ResponseEntity
+                        .status(410)
+                        .build();
 
-                supabaseStorageService.deleteFile(
-                        "49529c5b-7b40-42d1-a5a7-373d013c2a45-CertidaoNascimentoCaioAtualizado.pdf");
+                } catch (RuntimeException e) {
 
-                return "Ficheiro apagado";
-        }
-
+                return ResponseEntity
+                        .notFound()
+                        .build();
+                }
+                }
 }
